@@ -2,7 +2,7 @@
   "name": "sync-markdown-bookstack-action",
   "version": "1.0.0",
   "description": "An action that syncs markdown files to a book or chapter in BookStack",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "package": "ncc build index.js --license licenses.txt",
