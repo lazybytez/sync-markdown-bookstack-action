@@ -4,6 +4,11 @@
   "description": "An action that syncs markdown files to a book or chapter in BookStack",
   "main": "index.js",
   "scripts": {
+    "bundle": "npm run format:write && npm run package",
+    "package": "ncc build index.js --license licenses.txt",
+    "format:write": "prettier --write **/*.js",
+    "format:check": "prettier --check **/*.js",
+    "package:watch": "npm run package -- --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -20,6 +25,7 @@
     "glob": "^10.3.5"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.0"
+    "@vercel/ncc": "^0.38.0",
+    "prettier": "^3.0.3"
   }
 }
