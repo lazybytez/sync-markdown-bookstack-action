@@ -1,17 +1,17 @@
 name: 'Sync Markdown to BookStack'
 description: 'An action that syncs markdown files to a book or chapter in BookStack'
 inputs:
-  bookstack-url:
+  url:
     description: 'The URL of the BookStack instance'
     required: true
-  bookstack-token-id:
+  token-id:
     description: 'The id of your BookStack API connection'
     required: true
-  bookstack-token-secret:
+  token-secret:
     description: 'The secret of your BookStack API connection'
     required: true
   # One of these two must be passed - checked in JS code
-  book-id: 
+  book-id:
     description: 'The ID of the book to sync to'
     required: false
   chapter-id:

@@ -11,15 +11,15 @@ This action features:
 
 ## Inputs
 
-### `bookstack-url`
+### `url`
  - **Required** 
  - The URL to your BookStack instance, where the files will be synced to.
 
-### `bookstack-token-id`
+### `token-id`
  - **Required**
  - The id of your BookStack API connection.
 
-### `bookstack-token-secret`
+### `token-secret`
  - **Required**
  - The secret of your BookStack API connection.
 
