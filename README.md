@@ -21,6 +21,8 @@ this action uses the **first** headline of type **# (h1)** as the name for the c
 
 This means your markdown files **must** have at least one **#** to be accepted by the Action.
 
+Also this sync is currently one way, so deleting files from the repo won't delete the pages from BookStack.
+
 ## Inputs
 
 ### `url`
