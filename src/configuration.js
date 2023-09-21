@@ -6,28 +6,27 @@ const core = require("@actions/core");
 
 /**
  * @typedef {Object} BookstackCredentials
- * @property {string} bookstackUrl - The URL of the Bookstack instance.
- * @property {string} bookstackTokenId - The token ID used to authenticate with Bookstack.
- * @property {string} bookstackTokenSecret - The token secret used to authenticate with Bookstack.
+ * @property {string} bookstackUrl The URL of the Bookstack instance.
+ * @property {string} bookstackTokenId The token ID used to authenticate with Bookstack.
+ * @property {string} bookstackTokenSecret The token secret used to authenticate with Bookstack.
  */
 
 /**
  * @typedef {Object} PayloadDefaultsConfiguration
- * @property {string} bookId - The ID of the Bookstack book to sync with.
- * @property {string} chapterId - The ID of the Bookstack chapter to sync with.
- * @property {string[]} tags - An array of tags to apply to the synced pages.
+ * @property {string} bookId The ID of the Bookstack book to sync with.
+ * @property {string} chapterId The ID of the Bookstack chapter to sync with.
  */
 
 /**
  * @typedef {Object} SyncConfiguration
- * @property {string} path - The path to the Markdown files to sync.
+ * @property {string} path The path to the Markdown files to sync.
  */
 
 /**
  * @typedef {Object} ActionConfiguration
- * @property {BookstackCredentials} credentials - The Bookstack credentials to use for authentication.
- * @property {PayloadDefaultsConfiguration} payloadDefaults - The default payload configuration for synced pages.
- * @property {SyncConfiguration} syncConfiguration - The sync configuration for the action.
+ * @property {BookstackCredentials} credentials The Bookstack credentials to use for authentication.
+ * @property {PayloadDefaultsConfiguration} payloadDefaults The default payload configuration for synced pages.
+ * @property {SyncConfiguration} syncConfiguration The sync configuration for the action.
  */
 
 /**
@@ -69,7 +68,6 @@ function parseCredentialsConfiguration() {
 function parsePayloadDefaultsConfiguration() {
     const bookId = core.getInput("book-id");
     const chapterId = core.getInput("chapter-id");
-    let tags = core.getInput("tags");
 
     if (!bookId && !chapterId) {
         throw new Error(
@@ -77,14 +75,9 @@ function parsePayloadDefaultsConfiguration() {
         );
     }
 
-    if (tags) {
-        tags = tags.split(",").map((tag) => tag.trim());
-    }
-
     return {
         bookId: bookId,
         chapterId: chapterId,
-        tags: tags ? tags : [],
     };
 }
 

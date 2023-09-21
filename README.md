@@ -12,7 +12,6 @@ making it available in your central documentation solution.
 This action features:
  - Sync to either a chapter or a book
  - Use either a single file or a glob pattern to sync multiple files
- - Add tags to the generated pages
  - Keep your pages up to date - the action can create and update pages
 
 ## Limitations
@@ -45,9 +44,6 @@ Also this sync is currently one way, so deleting files from the repo won't delet
  - **Required, when `book-id` is not set** 
  - The ID of the book to sync to.
 
-### `tags`
- - The tags to add to the page, comma separated
-
 ### `path`
  - The path to the markdown file(s) to sync, you can use glob patterns for multiple files
 
@@ -65,7 +61,6 @@ with:
   # You only need one of book-id or chapter-id
   book-id: 123
   chapter-id: 123
-  tags: 'action,sync,bookstack'
   # You can either use a path to a file or a glob pattern:
   path: 'sub/directories/README.md'
   path: 'sub/*/*.md'

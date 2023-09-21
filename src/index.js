@@ -1,15 +1,17 @@
 const core = require("@actions/core");
-const github = require("@actions/github");
 const { parseActionsConfiguration } = require("./configuration");
 const { parsePagesAtPath } = require("./parser");
+const { upsertPages } = require("./bookstack");
 
-function readFiles() {}
+async function runAction() {
+    try {
+        const config = parseActionsConfiguration();
+        const pages = await parsePagesAtPath(config.syncConfiguration.path);
 
-try {
-    const config = parseActionsConfiguration();
-    const pages = parsePagesAtPath(config.syncConfiguration.path);
-
-    core.info(JSON.stringify(pages));
-} catch (error) {
-    core.setFailed(error.message);
+        await upsertPages(config, pages);
+    } catch (error) {
+        core.setFailed(error.message);
+    }
 }
+
+runAction();

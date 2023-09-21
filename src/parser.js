@@ -1,7 +1,12 @@
 const core = require("@actions/core");
 const glob = require("glob");
 const fs = require("fs");
-const os = require("os");
+
+/**
+ * @typedef {Object} FileContent
+ * @property {string} file The path to the file.
+ * @property {string} content The content of the file.
+ */
 
 /**
  * @typedef {Object} Page
@@ -19,21 +24,23 @@ const os = require("os");
  *
  * @param {string} path The path to find files at.
  *
- * @returns {string[]} An array of paths.
+ * @returns {Promise<string[]>} An array of paths.
  */
-function findFiles(path) {
+async function findFiles(path) {
     core.info(`🔍 Finding files using path: "${path}"`);
     let files = [path];
 
     if (path.includes("*")) {
-        files = glob.sync(path);
+        files = await glob.glob(path);
     }
 
     if (files.length === 0) {
         throw new Error(`❌ No files found matching path "${path}"`);
     }
 
-    core.info(`📚 Found ${files.length} files`);
+    files.forEach((file) => core.info(`📄 Found file: "${file}"`));
+
+    core.info(`✅ Found ${files.length} file(s)`);
 
     return files;
 }
@@ -45,27 +52,47 @@ function findFiles(path) {
  * instead of throwing an error.
  *
  * @param {string[]} files
- * @returns {string[]}
+ * @returns {Promise<FileContent[]>}
  */
-function readPageFiles(files) {
+async function readPageFiles(files) {
     core.info(`📖 Reading ${files.length} files`);
 
+    const readPromises = [];
+
+    files.forEach((file) => {
+        readPromises.push(
+            (async () => {
+                try {
+                    await fs.promises.stat(file);
+                } catch (error) {
+                    core.warning(`⚠️ File "${file}" does not exist, skipping`);
+
+                    throw error;
+                }
+
+                try {
+                    return {
+                        file: file,
+                        content: await fs.promises.readFile(file, "utf8"),
+                    };
+                } catch (error) {
+                    core.warning(`⚠️ Could not read file "${file}", skipping`);
+                }
+            })(),
+        );
+    });
+
+    const pagesResults = await Promise.allSettled(readPromises);
     const pages = [];
 
-    for (const file of files) {
-        if (!fs.existsSync(file)) {
-            core.warning(`⚠️ File "${file}" does not exist, skipping`);
+    for (const result of pagesResults) {
+        if (result.status === "rejected") {
             continue;
         }
 
-        try {
-            pages.push(fs.readFileSync(file, "utf8"));
-        } catch (error) {
-            core.warning(`⚠️ Could not read file "${file}", skipping`);
-        }
+        pages.push(result.value);
+        core.info(`📄 Read file: "${result.value.file}"`);
     }
-
-    core.info(`✅ Read ${pages.length} files`);
 
     return pages;
 }
@@ -75,22 +102,28 @@ function readPageFiles(files) {
  *
  * This function will log a warning if the page does not have a heading.
  *
- * @param {string} content
+ * @param {FileContent} fileContent
  *
  * @returns {Page}
  */
-function parsePage(content) {
+function parsePage(fileContent) {
+    const file = fileContent.file;
+    const content = fileContent.content;
+
     const headings = content.match(/^# (.*)$/m);
 
     if (!headings) {
-        core.warning(`⚠️ Page does not have a heading, skipping`);
+        core.warning(
+            `⚠️ Page content of file "${file}" does not have a heading, skipping`,
+        );
+
         return null;
     }
 
     const mainHeading = headings[1].trim();
     const contentWithoutHeading = content.replace(/^# (.*)$/m, "").trim();
 
-    core.info(`📝 Parsed page "${mainHeading}"`);
+    core.info(`📝 Parsed page: "${mainHeading}"`);
 
     return {
         name: mainHeading,
@@ -103,23 +136,23 @@ function parsePage(content) {
  *
  * This function will log warnings if the page does not have a heading.
  *
- * @param {string[]} pagesContent
+ * @param {FileContent[]} fileContents
  * @returns {Page[]}
  */
-function parsePages(pagesContent) {
-    core.info(`🔎 Parsing ${pagesContent.length} pages`);
+function parsePages(fileContents) {
+    core.info(`🪄 Parsing ${fileContents.length} pages`);
 
     const pages = [];
 
-    for (const content of pagesContent) {
-        const page = parsePage(content);
+    for (const fileContent of fileContents) {
+        const page = parsePage(fileContent);
 
         if (page) {
             pages.push(page);
         }
     }
 
-    core.info(`✅ Parsed ${pages.length} pages`);
+    core.info(`✅ Parsed ${pages.length} page(s)`);
 
     return pages;
 }
@@ -137,17 +170,17 @@ function parsePages(pagesContent) {
  *
  * @throws {Error} if no pages can be found at the given path
  *
- * @returns {Page[]}
+ * @returns {Promise<Page[]>}
  */
-function parsePagesAtPath(path) {
-    const files = findFiles(path);
-    core.info(os.EOL);
+async function parsePagesAtPath(path) {
+    const files = await findFiles(path);
+    core.info("");
 
-    const pagesContent = readPageFiles(files);
-    core.info(os.EOL);
+    const pagesContent = await readPageFiles(files);
+    core.info("");
 
     const pages = parsePages(pagesContent);
-    core.info(os.EOL);
+    core.info("");
 
     return pages;
 }

@@ -17,9 +17,6 @@ inputs:
   chapter-id:
     description: 'The ID of the chapter to sync to'
     required: false
-  tags:
-    description: 'The tags to add to the page, comma separated'
-    required: false
   path:
     description: 'The path to the markdown file(s) to sync, you can use glob patterns for multiple files'
     required: true
