@@ -15,12 +15,11 @@ This action features:
  - Keep your pages up to date - the action can create and update pages
 
 ## Limitations
-To support globs and therefore the creation of multiple pages at once,
-this action uses the **first** headline of type **# (h1)** as the name for the created pages.
-
-This means your markdown files **must** have at least one **#** to be accepted by the Action.
-
-Also this sync is currently one way, so deleting files from the repo won't delete the pages from BookStack.
+ - To support globs and therefore the creation of multiple pages at once, this action uses the **first** headline of type **# (h1)** as the name for the pages
+ - Your markdown files **must** have at least one **#** to be accepted by the Action
+ - The sync is currently one way, so deleting files from the repo won't delete the pages from BookStack
+ - We always push an update to BookStack which generates additional traffic, however, BookStack won't create additional revisions if the content is unchanged
+ - You must grab the book/chapter id from the database or using the API to configure the action
 
 ## Inputs
 
