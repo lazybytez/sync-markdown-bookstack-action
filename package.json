@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "bundle": "npm run format:write && npm run package",
-    "package": "ncc build index.js --license licenses.txt",
+    "package": "ncc build src/index.js --license licenses.txt",
     "format:write": "prettier --write **/*.js",
     "format:check": "prettier --check **/*.js",
     "package:watch": "npm run package -- --watch",
