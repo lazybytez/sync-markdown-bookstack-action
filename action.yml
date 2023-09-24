@@ -1,26 +1,27 @@
-name: 'Sync Markdown to BookStack'
-description: 'An action that syncs markdown files to a book or chapter in BookStack'
+---
+name: "Sync Markdown to BookStack"
+description: "An action that syncs markdown files to a book or chapter in BookStack"
 inputs:
-  url:
-    description: 'The URL of the BookStack instance'
-    required: true
-  token-id:
-    description: 'The id of your BookStack API connection'
-    required: true
-  token-secret:
-    description: 'The secret of your BookStack API connection'
-    required: true
-  # One of these two must be passed - checked in JS code
-  book-id:
-    description: 'The ID of the book to sync to'
-    required: false
-  chapter-id:
-    description: 'The ID of the chapter to sync to'
-    required: false
-  path:
-    description: 'The path to the markdown file(s) to sync, you can use glob patterns for multiple files'
-    required: true
+    url:
+        description: "The URL of the BookStack instance"
+        required: true
+    token-id:
+        description: "The id of your BookStack API connection"
+        required: true
+    token-secret:
+        description: "The secret of your BookStack API connection"
+        required: true
+    # One of these two must be passed - checked in JS code
+    book-id:
+        description: "The ID of the book to sync to"
+        required: false
+    chapter-id:
+        description: "The ID of the chapter to sync to"
+        required: false
+    path:
+        description: "The path to the markdown file(s) to sync, you can use glob patterns for multiple files"
+        required: true
 
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+    using: "node20"
+    main: "dist/index.js"
