@@ -112,7 +112,7 @@ the [How to Contribute][gh-contribute] document.
 
 [gh-contributors]: https://github.com/lazybytez/sync-markdown-bookstack-action/graphs/contributors
 
-[gh-stars-badge]: https://img.shields.io/github/stars/lazybytez?style=for-the-badge&colorA=302D41&colorB=f9e2af
+[gh-stars-badge]: https://img.shields.io/github/stars/lazybytez/sync-markdown-bookstack-action?style=for-the-badge&colorA=302D41&colorB=f9e2af
 
 [gh-stars]: https://github.com/lazybytez/sync-markdown-bookstack-action/stargazers
 
