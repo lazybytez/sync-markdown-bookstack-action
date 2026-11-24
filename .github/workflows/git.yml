@@ -4,27 +4,43 @@ name: Git
 on:
     pull_request:
 
+permissions:
+    contents: read
+
 jobs:
-    # Verify that the branch name matches the format
     verify_branch_name:
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         steps:
             - name: Check branch name
-              uses: deepakputhraya/action-branch-name@master
-              with:
-                  regex: '^[A-Za-z0-9-]+/[A-Za-z0-9-]+$'
-                  allowed_prefixes: "feature,hotfix,release,renovate"
-                  ignore: main,develop
+              shell: bash
+              env:
+                  BRANCH_NAME: ${{ github.head_ref }}
+              run: |
+                  case "${BRANCH_NAME}" in
+                      feature/?*|fix/?*|hotfix/?*|release/?*|renovate/?*) ;;
+                      *)
+                          echo "Branch names must start with feature/, fix/, hotfix/, release/, or renovate/." >&2
+                          exit 1
+                          ;;
+                  esac
 
-    # Verify that the commits matches the format
     verify_commit_messages:
-        if: (github.actor!= 'renovate[bot]') && (contains(github.head_ref, 'renovate/github_actions/') == false)
+        if: github.actor != 'renovate[bot]' && !startsWith(github.head_ref, 'renovate/')
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v7
               with:
                   fetch-depth: 0
-            - name: Run commitlint
-              uses: wagoid/commitlint-github-action@v2
+                  persist-credentials: false
+            - uses: actions/setup-node@v7
               with:
-                  configFile: commitlint.config.js
+                  node-version: 24
+                  cache: npm
+            - run: npm ci
+            - name: Check pull request commit messages
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+              run: npm exec --no -- commitlint --from "${BASE_SHA}" --to "${HEAD_SHA}" --verbose
