@@ -1,5 +1,5 @@
-const core = require("@actions/core");
-const axios = require("axios").default;
+import * as core from "@actions/core";
+import axios from "axios";
 
 /**
  * @typedef {Object} BookstackPagePayload
@@ -43,18 +43,6 @@ function createPayloadFromPage(payloadDefaults, page) {
     }
 
     return payload;
-}
-
-/**
- * Create post/put payloads from pages.
- *
- * @param {PayloadDefaultsConfiguration} payloadDefaults
- * @param {Page[]} pages
- *
- * @returns {BookstackPagePayload[]}
- */
-function createPayloadsFromPages(payloadDefaults, pages) {
-    return pages.map((page) => createPayloadFromPage(payloadDefaults, page));
 }
 
 /**
@@ -238,7 +226,7 @@ async function updatePage(config, pageId, page) {
  * @param {import('./configuration.js').ActionConfiguration} config
  * @param {import('./parser.js').Page[]} pages
  */
-async function upsertPages(config, pages) {
+export async function upsertPages(config, pages) {
     const existingPages = await retrieveExistingPages(config);
     core.info("");
 
@@ -254,7 +242,3 @@ async function upsertPages(config, pages) {
     }
     core.info(`✅ Finished upserting pages to BookStack`);
 }
-
-module.exports = {
-    upsertPages: upsertPages,
-};

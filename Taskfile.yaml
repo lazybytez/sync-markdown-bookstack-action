@@ -1,0 +1,34 @@
+version: "3"
+
+includes:
+    node: ./devops/tasks/node.yaml
+
+tasks:
+    default:
+        desc: List available tasks
+        cmds:
+            - task --list
+
+    install:
+        desc: Install locked dependencies
+        cmds:
+            - task: node:run
+              vars: { COMMAND: "npm ci" }
+
+    lint:
+        desc: Check lint and formatting
+        cmds:
+            - task: node:run
+              vars: { COMMAND: "npm run lint" }
+
+    test:
+        desc: Run tests with coverage
+        cmds:
+            - task: node:run
+              vars: { COMMAND: "npm test" }
+
+    bundle:
+        desc: Build the action bundle and license file
+        cmds:
+            - task: node:run
+              vars: { COMMAND: "npm run bundle" }

@@ -1,6 +1,6 @@
-const core = require("@actions/core");
-const glob = require("glob");
-const fs = require("fs");
+import fs from "node:fs";
+import * as core from "@actions/core";
+import { glob } from "glob";
 
 /**
  * @typedef {Object} FileContent
@@ -31,14 +31,16 @@ async function findFiles(path) {
     let files = [path];
 
     if (path.includes("*")) {
-        files = await glob.glob(path);
+        files = await glob(path);
     }
 
     if (files.length === 0) {
         throw new Error(`❌ No files found matching path "${path}"`);
     }
 
-    files.forEach((file) => core.info(`📄 Found file: "${file}"`));
+    files.forEach((file) => {
+        core.info(`📄 Found file: "${file}"`);
+    });
 
     core.info(`✅ Found ${files.length} file(s)`);
 
@@ -75,7 +77,7 @@ async function readPageFiles(files) {
                         file: file,
                         content: await fs.promises.readFile(file, "utf8"),
                     };
-                } catch (error) {
+                } catch {
                     core.warning(`⚠️ Could not read file "${file}", skipping`);
                 }
             })(),
@@ -172,7 +174,7 @@ function parsePages(fileContents) {
  *
  * @returns {Promise<Page[]>}
  */
-async function parsePagesAtPath(path) {
+export async function parsePagesAtPath(path) {
     const files = await findFiles(path);
     core.info("");
 
@@ -184,7 +186,3 @@ async function parsePagesAtPath(path) {
 
     return pages;
 }
-
-module.exports = {
-    parsePagesAtPath,
-};

@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+import * as core from "@actions/core";
 
 /**
  * @typedef {Object} BookstackCredentials
@@ -107,14 +107,10 @@ function parseSyncConfiguration() {
  *
  * @returns {ActionConfiguration}
  */
-function parseActionsConfiguration() {
+export function parseActionsConfiguration() {
     return {
         credentials: parseCredentialsConfiguration(),
         payloadDefaults: parsePayloadDefaultsConfiguration(),
         syncConfiguration: parseSyncConfiguration(),
     };
 }
-
-module.exports = {
-    parseActionsConfiguration,
-};
