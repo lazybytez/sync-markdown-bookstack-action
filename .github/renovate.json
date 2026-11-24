@@ -1,0 +1,8 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": ["config:recommended"],
+    "labels": ["C5 - dependencies"],
+    "reviewers": ["team:oss-maintainers"],
+    "dependencyDashboardApproval": true,
+    "gitIgnoredAuthors": ["41898282+github-actions[bot]@users.noreply.github.com"]
+}

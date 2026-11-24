@@ -1,0 +1,115 @@
+---
+name: Rebuild Renovate dist
+
+on:
+    pull_request:
+        branches:
+            - main
+
+permissions:
+    contents: read
+
+concurrency:
+    group: renovate-dist-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: Build Renovate dist
+        if: >-
+            github.event.pull_request.user.login == 'renovate[bot]' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            startsWith(github.head_ref, 'renovate/')
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        outputs:
+            artifact-id: ${{ steps.upload.outputs.artifact-id }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  persist-credentials: false
+            - name: Check for an existing rebuild commit
+              id: tip
+              run: |
+                  if [[ "$(git log -1 --format='%ae %s')" != '41898282+github-actions[bot]@users.noreply.github.com build(dist): rebuild bundle' ]]; then
+                      echo 'rebuild=true' >> "${GITHUB_OUTPUT}"
+                  fi
+            - uses: actions/setup-node@v7
+              if: steps.tip.outputs.rebuild == 'true'
+              with:
+                  node-version: 24
+                  cache: npm
+            - if: steps.tip.outputs.rebuild == 'true'
+              run: npm ci
+            - if: steps.tip.outputs.rebuild == 'true'
+              run: npm run bundle
+            - name: Check for changes to dist
+              id: diff
+              if: steps.tip.outputs.rebuild == 'true'
+              run: |
+                  changes=$(git status --porcelain -- dist/index.js dist/licenses.txt)
+                  if [[ -n "${changes}" ]]; then
+                      echo 'changed=true' >> "${GITHUB_OUTPUT}"
+                  fi
+            - uses: actions/upload-artifact@v7
+              id: upload
+              if: steps.diff.outputs.changed == 'true'
+              with:
+                  name: renovate-dist
+                  path: |
+                      dist/index.js
+                      dist/licenses.txt
+                  if-no-files-found: error
+                  retention-days: 1
+
+    commit:
+        name: Commit Renovate dist
+        needs: build
+        if: needs.build.outputs.artifact-id != ''
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/download-artifact@v8
+              with:
+                  artifact-ids: ${{ needs.build.outputs.artifact-id }}
+                  path: ${{ runner.temp }}/renovate-dist
+            - name: Create a signed rebuild commit
+              shell: bash
+              working-directory: ${{ runner.temp }}/renovate-dist
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  BRANCH_NAME: ${{ github.head_ref }}
+                  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+              run: |
+                  for file in index.js licenses.txt; do
+                      if [[ ! -f "${file}" || -L "${file}" ]]; then
+                          echo "Expected a regular artifact file named ${file}." >&2
+                          exit 1
+                      fi
+                  done
+
+                  jq -n \
+                      --arg repository "${GITHUB_REPOSITORY}" \
+                      --arg branch "${BRANCH_NAME}" \
+                      --arg head "${EXPECTED_HEAD}" \
+                      --rawfile bundle index.js \
+                      --rawfile licenses licenses.txt \
+                      '{
+                          query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
+                          variables: {
+                              input: {
+                                  branch: {repositoryNameWithOwner: $repository, branchName: $branch},
+                                  expectedHeadOid: $head,
+                                  message: {headline: "build(dist): rebuild bundle"},
+                                  fileChanges: {
+                                      additions: [
+                                          {path: "dist/index.js", contents: ($bundle | @base64)},
+                                          {path: "dist/licenses.txt", contents: ($licenses | @base64)}
+                                      ]
+                                  }
+                              }
+                          }
+                      }' | gh api graphql --input - --jq '.data.createCommitOnBranch.commit.oid'
