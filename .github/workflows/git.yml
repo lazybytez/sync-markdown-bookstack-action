@@ -12,7 +12,7 @@ jobs:
             - name: Check branch name
               uses: deepakputhraya/action-branch-name@master
               with:
-                  regex: '([a-zA-Z0-0-])+\/([a-zA-Z0-0-])+'
+                  regex: '^[A-Za-z0-9-]+/[A-Za-z0-9-]+$'
                   allowed_prefixes: "feature,hotfix,release,renovate"
                   ignore: main,develop
 
