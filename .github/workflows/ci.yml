@@ -10,6 +10,10 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
     lint:
         name: Biome
@@ -17,12 +21,12 @@ jobs:
         timeout-minutes: 5
         steps:
             - name: Check out repository
-              uses: actions/checkout@v7
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
             - name: Set up Node.js
-              uses: actions/setup-node@v7
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version: 24
                   cache: npm
@@ -39,12 +43,12 @@ jobs:
         timeout-minutes: 5
         steps:
             - name: Check out repository
-              uses: actions/checkout@v7
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
             - name: Set up Node.js
-              uses: actions/setup-node@v7
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version: 24
                   cache: npm
@@ -55,20 +59,15 @@ jobs:
             - name: Run tests with coverage
               run: npm test
 
-    actionlint:
-        name: actionlint
+    jactionlint:
+        name: jactionlint
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
             - name: Check out repository
-              uses: actions/checkout@v7
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
             - name: Lint workflows
-              run: >-
-                  docker run --rm --user "$(id -u):$(id -g)"
-                  --mount "type=bind,source=${GITHUB_WORKSPACE},target=/repo,readonly"
-                  --workdir /repo
-                  rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
-                  -color
+              uses: jdx/jactionlint@72c00452809bcca05b8bc12acdcf15dd7a9c1c5e # v2.6.0
