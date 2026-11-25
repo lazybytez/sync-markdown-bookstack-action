@@ -4,27 +4,52 @@ name: Git
 on:
     pull_request:
 
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
 jobs:
-    # Verify that the branch name matches the format
     verify_branch_name:
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         steps:
             - name: Check branch name
-              uses: deepakputhraya/action-branch-name@master
-              with:
-                  regex: '^[A-Za-z0-9-]+/[A-Za-z0-9-]+$'
-                  allowed_prefixes: "feature,hotfix,release,renovate"
-                  ignore: main,develop
+              env:
+                  BRANCH_NAME: ${{ github.head_ref }}
+              run: |
+                  case "${BRANCH_NAME}" in
+                      feature/?*|fix/?*|hotfix/?*|release/?*|renovate/?*) ;;
+                      *)
+                          echo "Branch names must start with feature/, fix/, hotfix/, release/, or renovate/." >&2
+                          exit 1
+                          ;;
+                  esac
 
-    # Verify that the commits matches the format
     verify_commit_messages:
-        if: (github.actor!= 'renovate[bot]') && (contains(github.head_ref, 'renovate/github_actions/') == false)
+        if: github.actor != 'renovate[bot]' && !startsWith(github.head_ref, 'renovate/')
         runs-on: ubuntu-latest
+        timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v3
+            - name: Check out repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   fetch-depth: 0
-            - name: Run commitlint
-              uses: wagoid/commitlint-github-action@v2
+                  persist-credentials: false
+
+            - name: Set up Node.js
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
-                  configFile: commitlint.config.js
+                  node-version: 24
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Check commit messages
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+              run: npm exec --no -- commitlint --from "${BASE_SHA}" --to "${HEAD_SHA}" --verbose
