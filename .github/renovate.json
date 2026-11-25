@@ -4,5 +4,17 @@
     "labels": ["C5 - dependencies"],
     "reviewers": ["team:oss-maintainers"],
     "dependencyDashboardApproval": true,
-    "gitIgnoredAuthors": ["41898282+github-actions[bot]@users.noreply.github.com"]
+    "minimumReleaseAge": "3 days",
+    "abandonmentThreshold": "2 years",
+    "lockFileMaintenance": { "enabled": true },
+    "gitIgnoredAuthors": ["41898282+github-actions[bot]@users.noreply.github.com"],
+    "packageRules": [
+        { "groupName": "github actions", "matchManagers": ["github-actions"] },
+        { "groupName": "vitest", "matchPackageNames": ["vitest", "@vitest/**"] },
+        { "groupName": "commitlint", "matchPackageNames": ["@commitlint/**"] },
+        {
+            "matchUpdateTypes": ["lockFileMaintenance", "pin", "pinDigest", "replacement", "rollback"],
+            "minimumReleaseAge": null
+        }
+    ]
 }
