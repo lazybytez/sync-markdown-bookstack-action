@@ -70,6 +70,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         permissions:
+            actions: write
             contents: write
         steps:
             - uses: actions/download-artifact@v8
@@ -113,3 +114,11 @@ jobs:
                               }
                           }
                       }' | gh api graphql --input - --jq '.data.createCommitOnBranch.commit.oid'
+            - name: Run checks on the rebuild commit
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  BRANCH_NAME: ${{ github.head_ref }}
+              run: |
+                  for workflow in ci.yml check-dist.yml; do
+                      gh workflow run "${workflow}" --repo "${GITHUB_REPOSITORY}" --ref "${BRANCH_NAME}"
+                  done
