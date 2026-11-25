@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { createBookStackClient } from "./client.js";
 
 const secret = "test-token-secret";
@@ -15,6 +15,10 @@ function setup() {
     });
     return { client, fetch, sleep };
 }
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 test("sends authenticated JSON requests under the BookStack API path", async () => {
     const { client, fetch } = setup();
@@ -51,7 +55,10 @@ test("retries a 429 and respects Retry-After", async () => {
     await expect(client.request("GET", "/pages/7")).resolves.toEqual({ id: 7 });
     expect(sleep.mock.calls).toEqual([[5000]]);
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect(fetch.mock.calls[1]).toEqual(fetch.mock.calls[0]);
+    const [first, second] = fetch.mock.calls.map(
+        ([url, { signal, ...options }]) => [url, options],
+    );
+    expect(second).toEqual(first);
 });
 
 const now = Date.parse("2026-01-01T12:00:00Z");
@@ -113,6 +120,84 @@ test("retries network failures and hides their original error details", async ()
     );
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(sleep.mock.calls).toEqual([[1000], [2000]]);
+});
+
+test.each(["HEAD", "PUT", "DELETE", "put"])(
+    "retries a %s after a network failure",
+    async (method) => {
+        const { client, fetch, sleep } = setup();
+        fetch
+            .mockRejectedValueOnce(new TypeError("socket hang up"))
+            .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+        await expect(
+            client.request(method, "/pages/7"),
+        ).resolves.toBeUndefined();
+        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(sleep.mock.calls).toEqual([[1000]]);
+    },
+);
+
+test.each(["POST", "PATCH"])(
+    "does not repeat a %s after a network failure",
+    async (method) => {
+        const { client, fetch, sleep } = setup();
+        fetch.mockRejectedValue(new TypeError("socket hang up"));
+
+        await expect(
+            client.request(method, "/pages", { body: { name: "Guide" } }),
+        ).rejects.toThrow(
+            `${method} /pages failed: network error, write outcome unknown`,
+        );
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(sleep).not.toHaveBeenCalled();
+    },
+);
+
+test("retries a POST rejected with 429", async () => {
+    const { client, fetch } = setup();
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 429 }))
+        .mockResolvedValueOnce(Response.json({ id: 7 }, { status: 201 }));
+
+    await expect(
+        client.request("POST", "/pages", { body: { name: "Guide" } }),
+    ).resolves.toEqual({ id: 7 });
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("limits each attempt with a fresh timeout signal", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const { client, fetch, sleep } = setup();
+    fetch
+        .mockRejectedValueOnce(
+            new DOMException("The operation timed out", "TimeoutError"),
+        )
+        .mockResolvedValueOnce(Response.json({ id: 7 }));
+
+    await expect(client.request("GET", "/pages/7")).resolves.toEqual({ id: 7 });
+    expect(timeout.mock.calls).toEqual([[30_000], [30_000]]);
+    const [first, second] = fetch.mock.calls.map(
+        ([, options]) => options.signal,
+    );
+    expect(first).toBeInstanceOf(AbortSignal);
+    expect(second).not.toBe(first);
+    expect(sleep.mock.calls).toEqual([[1000]]);
+});
+
+test("accepts a custom request timeout", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const fetch = vi.fn().mockResolvedValue(Response.json({}));
+    const client = createBookStackClient({
+        baseUrl: "https://bookstack.example",
+        tokenId: "test-id",
+        tokenSecret: secret,
+        fetch,
+        timeout: 120_000,
+    });
+
+    await client.request("GET", "/books");
+    expect(timeout.mock.calls).toEqual([[120_000]]);
 });
 
 test("reports the BookStack error message without retrying a 401", async () => {

@@ -1,5 +1,6 @@
 const MAX_ATTEMPTS = 3;
 const MAX_RETRY_DELAY = 60_000;
+const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE"]);
 
 function wait(milliseconds) {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -59,6 +60,7 @@ function readResponse(response, text, failure) {
  * @param {string} options.tokenSecret
  * @param {typeof globalThis.fetch} [options.fetch]
  * @param {(milliseconds: number) => Promise<void>} [options.sleep]
+ * @param {number} [options.timeout] Milliseconds allowed for each attempt.
  */
 export function createBookStackClient({
     baseUrl,
@@ -66,6 +68,7 @@ export function createBookStackClient({
     tokenSecret,
     fetch: fetchRequest = globalThis.fetch,
     sleep = wait,
+    timeout = 30_000,
 }) {
     const apiUrl = URL.parse(baseUrl);
     if (!apiUrl || !["http:", "https:"].includes(apiUrl.protocol)) {
@@ -130,9 +133,18 @@ export function createBookStackClient({
             let response;
             let text;
             try {
-                response = await fetchRequest(url, options);
+                response = await fetchRequest(url, {
+                    ...options,
+                    signal: AbortSignal.timeout(timeout),
+                });
                 text = await response.text();
             } catch {
+                if (!IDEMPOTENT_METHODS.has(method.toUpperCase())) {
+                    throw failure(
+                        "network error, write outcome unknown",
+                        response?.status,
+                    );
+                }
                 status = response?.status;
                 if (attempt < MAX_ATTEMPTS) {
                     await sleep(retryDelay(attempt));
