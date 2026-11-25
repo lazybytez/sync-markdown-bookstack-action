@@ -17,16 +17,24 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v7
+            - name: Check out repository
+              uses: actions/checkout@v7
               with:
                   persist-credentials: false
-            - uses: actions/setup-node@v7
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
-            - run: npm run bundle
-            - name: Compare the committed and rebuilt dist files
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Rebuild dist
+              run: npm run bundle
+
+            - name: Compare committed and rebuilt dist
               id: diff
               run: |
                   changes=$(git status --porcelain -- dist/)
@@ -35,8 +43,10 @@ jobs:
                       git diff --text -- dist/
                       exit 1
                   fi
-            - uses: actions/upload-artifact@v7
+
+            - name: Upload rebuilt dist
               if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+              uses: actions/upload-artifact@v7
               with:
                   name: dist
                   path: dist/

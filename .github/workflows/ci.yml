@@ -2,10 +2,10 @@
 name: CI
 
 on:
-    pull_request:
     push:
         branches:
             - main
+    pull_request:
 
 permissions:
     contents: read
@@ -16,40 +16,56 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v7
+            - name: Check out repository
+              uses: actions/checkout@v7
               with:
                   persist-credentials: false
-            - uses: actions/setup-node@v7
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
-            - run: npm run lint
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Check lint and formatting
+              run: npm run lint
 
     test:
         name: Vitest
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v7
+            - name: Check out repository
+              uses: actions/checkout@v7
               with:
                   persist-credentials: false
-            - uses: actions/setup-node@v7
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
-            - run: npm test
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run tests with coverage
+              run: npm test
 
     actionlint:
         name: actionlint
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v7
+            - name: Check out repository
+              uses: actions/checkout@v7
               with:
                   persist-credentials: false
-            - name: Run actionlint
+
+            - name: Lint workflows
               run: >-
                   docker run --rm --user "$(id -u):$(id -g)"
                   --mount "type=bind,source=${GITHUB_WORKSPACE},target=/repo,readonly"
