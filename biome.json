@@ -1,0 +1,15 @@
+{
+    "files": {
+        "includes": [
+            "src/**",
+            "*.js",
+            "biome.json",
+            "package.json",
+            "action.yml",
+            "Taskfile.yaml"
+        ]
+    },
+    "formatter": {
+        "useEditorconfig": true
+    }
+}

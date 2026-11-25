@@ -1,7 +1,7 @@
-const core = require("@actions/core");
-const { parseActionsConfiguration } = require("./configuration");
-const { parsePagesAtPath } = require("./parser");
-const { upsertPages } = require("./bookstack");
+import * as core from "@actions/core";
+import { upsertPages } from "./bookstack.js";
+import { parseActionsConfiguration } from "./configuration.js";
+import { parsePagesAtPath } from "./parser.js";
 
 async function runAction() {
     try {

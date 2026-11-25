@@ -1,0 +1,46 @@
+version: "3"
+
+vars:
+    NODE_IMAGE: '{{.NODE_IMAGE | default "node:24"}}'
+    HOST_USER:
+        sh: printf '%s:%s' "$(id -u)" "$(id -g)"
+
+tasks:
+    default:
+        desc: List available tasks
+        cmds:
+            - task --list
+
+    install:
+        desc: Install locked dependencies
+        cmds:
+            - task: node
+              vars: { COMMAND: "npm ci" }
+
+    lint:
+        desc: Check lint and formatting
+        cmds:
+            - task: node
+              vars: { COMMAND: "npm run lint" }
+
+    test:
+        desc: Run tests with coverage
+        cmds:
+            - task: node
+              vars: { COMMAND: "npm test" }
+
+    bundle:
+        desc: Build the action bundle and license file
+        cmds:
+            - task: node
+              vars: { COMMAND: "npm run bundle" }
+
+    node:
+        internal: true
+        desc: Run a command in the Node container
+        cmds:
+            - >-
+                docker run --rm --user "{{.HOST_USER}}"
+                --env npm_config_cache=/tmp/npm-cache
+                --mount "type=bind,source={{.ROOT_DIR}},target=/workspace"
+                --workdir /workspace "{{.NODE_IMAGE}}" {{.COMMAND}}

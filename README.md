@@ -66,24 +66,18 @@ with:
 ```
 
 ## Development
-To develop locally, you should install **NodeJS 20**.
 
-The following commands can be used for local development:
+Install Docker and Task. The development tasks run in a Node 24 container.
+
 ```shell
-# Install dependencies
-$ npm install
-
-# Format and bundle for distribution
-$ npm run bundle
-
-# Only check code style using prettier
-$ npm run format:check
-
-# Check code style and reformat
-$ npm run format:write
+task install
+task lint
+task bundle
+task test
 ```
 
-Be sure to always run the bundler and commit the `dist/` directory when doing changes to the code.
+Place Vitest tests next to the code as `*.test.js`. The line coverage minimum is 90% for new source files.
+After changing code or dependencies, rebuild and commit both `dist/index.js` and `dist/licenses.txt`.
 
 ## Contributing
 
