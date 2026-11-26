@@ -31,9 +31,20 @@ test("groups deep files under first-level chapters and excludes nested targets",
         files: [root],
         chapters: [
             { directory: join(cwd, "02-operations"), files: [operation] },
-            { directory: join(cwd, "empty"), files: [] },
             { directory: join(cwd, "guides"), files: [guide] },
         ],
+    });
+});
+
+test("does not plan chapters for directories without selected pages", async () => {
+    await mkdir(join(cwd, "images"));
+    await writeFile(join(cwd, "images", "diagram.png"), "");
+    await writeFile(join(cwd, "images", "chapter.yaml"), "name: Images\n");
+    const target = { path: cwd, bookId: 12, files: [] };
+
+    await expect(planTargetLayout(target, [target])).resolves.toEqual({
+        files: [],
+        chapters: [],
     });
 });
 

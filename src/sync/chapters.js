@@ -50,9 +50,11 @@ export async function planTargetLayout(target, targets) {
     }
     return {
         files,
-        chapters: [...chapters.values()].sort((left, right) =>
-            left.directory.localeCompare(right.directory),
-        ),
+        chapters: [...chapters.values()]
+            .filter((chapter) => chapter.files.length > 0)
+            .sort((left, right) =>
+                left.directory.localeCompare(right.directory),
+            ),
     };
 }
 
