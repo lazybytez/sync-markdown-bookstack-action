@@ -11,6 +11,12 @@ inputs:
     token-secret:
         description: "The secret of your BookStack API connection"
         required: true
+    config:
+        description: "Inline YAML configuration for sync targets"
+        required: false
+    config-file:
+        description: "Path to the YAML target configuration. Defaults to bookstack.yaml when neither config input is set"
+        required: false
     # One of these two must be passed - checked in JS code
     book-id:
         description: "The ID of the book to sync to"
