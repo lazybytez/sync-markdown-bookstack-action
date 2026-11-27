@@ -235,3 +235,32 @@ test.each([
         `config input: ${message}`,
     );
 });
+
+test.each([false, "another/repo"])(
+    "accepts repository tracking setting %s",
+    async (repoTag) => {
+        await expect(
+            loadTargets({
+                cwd,
+                config: `repo-tag: ${JSON.stringify(repoTag)}\n${example}`,
+            }),
+        ).resolves.toMatchObject({ repoTag });
+    },
+);
+
+test.each(["true", '"  "', "42"])(
+    "rejects the repository tracking setting %s",
+    async (value) => {
+        await expect(
+            loadTargets({ cwd, config: `repo-tag: ${value}\n${example}` }),
+        ).rejects.toThrow(
+            "config input: repo-tag must be false or a non-empty string",
+        );
+    },
+);
+
+test("normalizes the repo tag as BookStack stores it", async () => {
+    await expect(
+        loadTargets({ cwd, config: `repo-tag: "  org/repo  "\n${example}` }),
+    ).resolves.toMatchObject({ repoTag: "org/repo" });
+});

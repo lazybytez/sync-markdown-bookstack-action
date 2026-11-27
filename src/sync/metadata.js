@@ -101,7 +101,7 @@ export function normalizeTags(tags = []) {
         }
         return {
             name: optionalText(tag.name, "tag name"),
-            value: String(tag.value),
+            value: String(tag.value).trim(),
         };
     });
 }

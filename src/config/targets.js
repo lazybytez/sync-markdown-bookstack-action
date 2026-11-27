@@ -90,7 +90,13 @@ function parseConfig(yaml, source, cwd) {
     if (!isMapping(config)) {
         throw new Error(`${source}: config must be a mapping`);
     }
-    rejectUnknownKeys(config, ["targets"], source);
+    rejectUnknownKeys(config, ["targets", "repo-tag"], source);
+    const repoTag = config["repo-tag"];
+    if (repoTag !== undefined && repoTag !== false && !isNonBlank(repoTag)) {
+        throw new Error(
+            `${source}: repo-tag must be false or a non-empty string`,
+        );
+    }
     if (!Array.isArray(config.targets) || config.targets.length === 0) {
         throw new Error(`${source}: targets must be a non-empty list`);
     }
@@ -106,7 +112,12 @@ function parseConfig(yaml, source, cwd) {
         }
         targets.push(target);
     }
-    return { targets, source, cwd };
+    return {
+        targets,
+        source,
+        cwd,
+        repoTag: typeof repoTag === "string" ? repoTag.trim() : repoTag,
+    };
 }
 
 /**
